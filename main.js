@@ -1,8 +1,3 @@
-function addBubble(x, y, radius, color){
-  var bubble = {x: x, y: y, radius: 0, color: color, targetRadius: radius, speed: {x: 0, y: 0}};
-  bubbles.push(bubble);
-}
-
 function areColliding(a, b){
   // Needs rewriting
   var dx = a.x - b.x;
@@ -13,27 +8,15 @@ function areColliding(a, b){
 }
 
 function drawBubbles(){
-  requestAnimationFrame(drawBubbles);
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  bufferContext.clearRect(0, 0, canvas.width, canvas.height);
   // Draw the bubbles
   for(var i=0; i<bubbles.length; i++){
     var bubble = bubbles[i];
-    context.beginPath();
-    context.arc(bubble.x, bubble.y, bubble.radius, 0, 2 * Math.PI, false);
-    var percentExpanded = 1 - (bubble.targetRadius - bubble.radius) / bubble.targetRadius;
-    context.fillStyle = "rgba(" + bubble.color.r + ", " + bubble.color.g + ", " + bubble.color.b + ", " + bubble.color.a * percentExpanded + ")";
-    context.fill();
+    bufferContext.drawImage(bubble.getImage(), bubble.x - bubble.radius, bubble.y - bubble.radius);
   }
-  // Grow any bubbles that need to grow
-  for(var i=0; i<bubbles.length; i++){
-    var bubble = bubbles[i];
-    if(bubble.radius < bubble.targetRadius){
-      bubble.radius += 0.2;
-    }
-    if(bubble.radius > bubble.targetRadius){
-      bubble.radius = bubble.targetRadius;
-    }
-  }
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(bufferCanvas, 0, 0);
+
   // Move bubbles away from mouse at a speed inversely proportional to distance from mouse
   if(mouse.down){
     for(var i=0; i<bubbles.length; i++){
@@ -41,8 +24,8 @@ function drawBubbles(){
       var dx = bubble.x - mouse.x;
       var dy = bubble.y - mouse.y;
       var distance = Math.sqrt(dx*dx + dy*dy);
-      var speedx = dx / Math.pow(distance, 2) * clickPower;
-      var speedy = dy / Math.pow(distance, 2) * clickPower;
+      var speedx = dx / Math.pow(distance, 2) * clickPower * 20 / bubble.radius;
+      var speedy = dy / Math.pow(distance, 2) * clickPower * 20 / bubble.radius;
       bubble.speed.x = speedx;
       bubble.speed.y = speedy;
     }
@@ -70,25 +53,8 @@ function drawBubbles(){
       bubble.y = canvas.height - padding;
       bubble.speed.y *= -bounce;
     }
-    // Check for collisions, TODO: better bubble joining animation
-    /*
-    var toRemove = [];
-    for(var j=0; j<bubbles.length; j++){
-      var bubble2 = bubbles[j];
-      if(j != i && areColliding(bubble, bubble2)){
-        if(bubble.radius > bubble2.radius){
-          bubble.targetRadius = Math.sqrt(bubble.radius * bubble.radius + bubble2.radius * bubble2.radius);
-          toRemove.push(j);
-        }else{
-          bubble2.targetRadius = Math.sqrt(bubble.radius * bubble.radius + bubble2.radius * bubble2.radius);
-          toRemove.push(i);
-        }
-      }
-    }
-    for(var j=0; j<toRemove.length; j++){
-      bubbles.splice(toRemove[j], 1);
-    }*/
   }
+  requestAnimationFrame(drawBubbles);
 }
 
 function randomColor(){
@@ -97,8 +63,29 @@ function randomColor(){
   // Color distance from black must be at least 100, as the background color is black
   var minimumBlue = r*r + g*g < 100 ? Math.sqrt(100*100 - r*r - g*g) : 0;
   var b = Math.random()*(255 - minimumBlue) + minimumBlue;
-  var a = Math.random();
+  var a = Math.random()*0.3+0.7;
+
   return {r: Math.floor(r), g: Math.floor(g), b: Math.floor(b), a: Math.floor(a*10)/10};
+}
+
+function colorFromScheme(name){
+  var schemes = {
+    easter: [
+      {r: 131, g: 221, b: 214},
+      {r: 139, g: 234, b: 175},
+      {r: 247, g: 243, b: 150},
+      {r: 242, g: 201, b: 201},
+      {r: 172, g: 167, b: 196}
+
+    ]
+  };
+
+  var chosenColor = schemes[name][Math.floor(Math.random() * schemes[name].length)];
+
+  chosenColor.a = Math.random() * 0.3 + 0.7;
+
+  return chosenColor;
+
 }
 
 window.onload = function(){
@@ -107,6 +94,10 @@ window.onload = function(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   context = canvas.getContext("2d");
+  bufferCanvas = document.createElement("canvas");
+  bufferContext = bufferCanvas.getContext("2d");
+  bufferCanvas.width = canvas.width;
+  bufferCanvas.height = canvas.height;
 
   //addBubble(canvas.width*3/8, canvas.height/2, 25, {r: 153, g: 153, b: 255, a: 0.9});
   //addBubble(canvas.width*5/8, canvas.height/2, 25, {r: 153, g: 153, b: 255, a: 0.9});
@@ -115,10 +106,10 @@ window.onload = function(){
   friction = 0.01; // Slows bubbles over time
   bounce = 0.5; // How much speed remains after rebound off walls
   padding = 20; // How many pixels buffer from edge of screen the bubbles should bounce
-  clickPower = 300; // How much power a click should have
+  clickPower = 1000; // How much power a click should have
 
-  for(var i=0; i<100; i++){
-    addBubble(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*40+10, randomColor());
+  for(var i=0; i<2000; i++){
+    bubbles.push(new Bubble(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*20+10, colorFromScheme("easter")));
   }
 
   mouse = {};
@@ -155,13 +146,6 @@ window.onload = function(){
     mouse.down = false;
     mouse.x = e.changedTouches[0].clientX;
     mouse.y = e.changedTouches[0].clientY;
-  }
-
-  canvas.ondblclick = function(){
-    bubbles = [];
-    for(var i=0; i<100; i++){
-      addBubble(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*40+10, randomColor());
-    }
   }
 
   requestAnimationFrame(drawBubbles);
