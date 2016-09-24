@@ -124,6 +124,14 @@ window.onload = function(){
     mouse.y = e.changedTouches[0].clientY;
   }
 
+  // Handle window resize
+  window.onresize = function(e){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    bufferCanvas.width = canvas.width;
+    bufferCanvas.height = canvas.height;
+  }
+
   // Prevent browsers from handling touch events (zoom, swipe to go back, etc.)
   document.ontouchmove = function(e){
     e.preventDefault();
