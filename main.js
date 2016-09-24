@@ -1,15 +1,5 @@
-function areColliding(a, b){
-  // Needs rewriting
-  var dx = a.x - b.x;
-  var dy = a.y - b.y;
-  var distance = Math.sqrt(dx*dx + dy*dy);
-  var overlap = (a.radius + b.radius - distance) / (a.radius + b.radius);
-  return overlap > 0.5;
-}
-
 function drawBubbles(){
   bufferContext.clearRect(0, 0, canvas.width, canvas.height);
-  // Draw the bubbles
   for(var i=0; i<bubbles.length; i++){
     var bubble = bubbles[i];
     bufferContext.drawImage(bubble.getImage(), bubble.x - bubble.radius, bubble.y - bubble.radius);
@@ -57,17 +47,6 @@ function drawBubbles(){
   requestAnimationFrame(drawBubbles);
 }
 
-function randomColor(){
-  var r = Math.random()*255;
-  var g = Math.random()*255;
-  // Color distance from black must be at least 100, as the background color is black
-  var minimumBlue = r*r + g*g < 100 ? Math.sqrt(100*100 - r*r - g*g) : 0;
-  var b = Math.random()*(255 - minimumBlue) + minimumBlue;
-  var a = Math.random()*0.3+0.7;
-
-  return {r: Math.floor(r), g: Math.floor(g), b: Math.floor(b), a: Math.floor(a*10)/10};
-}
-
 function colorFromScheme(name){
   var schemes = {
     easter: [
@@ -76,7 +55,6 @@ function colorFromScheme(name){
       {r: 247, g: 243, b: 150},
       {r: 242, g: 201, b: 201},
       {r: 172, g: 167, b: 196}
-
     ]
   };
 
@@ -99,16 +77,14 @@ window.onload = function(){
   bufferCanvas.width = canvas.width;
   bufferCanvas.height = canvas.height;
 
-  //addBubble(canvas.width*3/8, canvas.height/2, 25, {r: 153, g: 153, b: 255, a: 0.9});
-  //addBubble(canvas.width*5/8, canvas.height/2, 25, {r: 153, g: 153, b: 255, a: 0.9});
-
   // Settings
   friction = 0.01; // Slows bubbles over time
   bounce = 0.5; // How much speed remains after rebound off walls
-  padding = 20; // How many pixels buffer from edge of screen the bubbles should bounce
+  padding = 20; // How many pixels from edge of screen the bubbles should bounce
   clickPower = 1000; // How much power a click should have
 
-  for(var i=0; i<2000; i++){
+  // Add 500 bubbles
+  for(var i=0; i<500; i++){
     bubbles.push(new Bubble(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*20+10, colorFromScheme("easter")));
   }
 
@@ -146,6 +122,11 @@ window.onload = function(){
     mouse.down = false;
     mouse.x = e.changedTouches[0].clientX;
     mouse.y = e.changedTouches[0].clientY;
+  }
+
+  // Prevent browsers from handling touch events (zoom, swipe to go back, etc.)
+  document.ontouchmove = function(e){
+    e.preventDefault();
   }
 
   requestAnimationFrame(drawBubbles);
