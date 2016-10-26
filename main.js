@@ -13,9 +13,10 @@ function drawBubbles(){
       var bubble = bubbles[i];
       var dx = bubble.x - mouse.x;
       var dy = bubble.y - mouse.y;
-      var distance = Math.sqrt(dx*dx + dy*dy);
-      var speedx = dx / Math.pow(distance, 2) * clickPower * 20 / bubble.radius;
-      var speedy = dy / Math.pow(distance, 2) * clickPower * 20 / bubble.radius;
+      // var distance = Math.sqrt(dx*dx + dy*dy);
+      var distanceSquared = dx*dx + dy*dy;
+      var speedx = dx / distanceSquared * clickPower * 20 / bubble.radius;
+      var speedy = dy / distanceSquared * clickPower * 20 / bubble.radius;
       bubble.speed.x = speedx;
       bubble.speed.y = speedy;
     }
