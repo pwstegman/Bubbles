@@ -37,7 +37,8 @@ function Bubble() {
 
   this.drawImage = function(){
     context.beginPath();
-    context.arc(Math.floor(this.radius), Math.floor(this.radius), Math.floor(this.radius), 0, 2 * Math.PI, false);
+    var flooredRadius = Math.floor(this.radius);
+    context.arc(flooredRadius, flooredRadius, flooredRadius, 0, 2 * Math.PI, false);
     var gradient = context.createRadialGradient(this.radius + this.radius * 0.3, this.radius - this.radius * 0.3, this.radius * 0.1, this.radius, this.radius, this.radius);
     gradient.addColorStop(0, this.rgbaColor());
     gradient.addColorStop(1, this.rgbaColor(0.6));
